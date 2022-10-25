@@ -129,6 +129,7 @@ app.post('/auth/login', async (req, res) => {
 })
 
 function checkToken(req, res, next) {
+
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
 
@@ -139,17 +140,21 @@ function checkToken(req, res, next) {
     try {
 
         const secret = process.env.SECRET
-        
+
         jwt.verify(token, secret)
 
         next()
-
 
     } catch (error) {
         res.status(400).json({ msg: 'Token Inválido!' })
     }
 }
 
+
+let PORT = process.env.PORT
+if (PORT == null || PORT == "") {
+  PORT = 3000;
+}
 
 //Credentials
 const dbUser = process.env.DB_USER
@@ -159,7 +164,7 @@ const dbPassword = process.env.DB_PASS
 mongoose.connect(
     `mongodb+srv://${dbUser}:${dbPassword}@mern-shopping.jntdb.mongodb.net/?retryWrites=true&w=majority`
 ).then(() => {
-    app.listen(3000)
+    app.listen(PORT || 3000, () => console.log(`Server listening on port: ${PORT}`))
     console.log("Connected to database")
 }).catch((err) => console.log(err))
 
