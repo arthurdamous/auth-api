@@ -4,8 +4,13 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const req = require('express')
+const morgan = require('morgan');
 
 const app = express()
+
+if(process.env.NODE_ENV === 'development' ){
+    app.use(morgan('dev'));
+}
 
 //Configure json response
 app.use(express.json())
@@ -151,10 +156,7 @@ function checkToken(req, res, next) {
 }
 
 
-let PORT = process.env.PORT
-if (PORT == null || PORT == "") {
-  PORT = 3000;
-}
+const PORT = process.env.PORT || 5000 
 
 //Credentials
 const dbUser = process.env.DB_USER
@@ -164,7 +166,7 @@ const dbPassword = process.env.DB_PASS
 mongoose.connect(
     `mongodb+srv://${dbUser}:${dbPassword}@mern-shopping.jntdb.mongodb.net/?retryWrites=true&w=majority`
 ).then(() => {
-    app.listen(PORT || 3000, () => console.log(`Server listening on port: ${PORT}`))
+    app.listen(PORT, console.log(`Server Running in ${process.env.NODE_ENV} mode on port ${PORT}`))
     console.log("Connected to database")
 }).catch((err) => console.log(err))
 
