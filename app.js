@@ -8,7 +8,7 @@ const morgan = require('morgan');
 
 const app = express()
 
-if(process.env.NODE_ENV === 'development' ){
+if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
 
@@ -17,10 +17,51 @@ app.use(express.json())
 
 //Models
 const User = require('./model/User')
+const Note = require('./model/Note')
 
 //Public Route
 app.get('/', (req, res) => {
     res.status(200).json({ msg: "Bem vindo a minha api" })
+})
+
+app.post('/notes/save', checkToken, async (req, res) => {
+    const { title, description, created, modified } = req.body
+
+    if (!title) {
+        return res.status(422).json({ msg: 'O título é obrigatório' })
+    }
+
+    const note = new Note({
+        title,
+        description,
+        created,
+        modified
+    })
+
+    try {
+
+        await note.save()
+
+        res.status(201).json({ msg: 'Nota adicionada com sucesso' })
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ msg: 'Aconteceu um erro no servidor, tente novamente' })
+    }
+
+
+})
+
+app.get('/notes', checkToken, async (req, res) => {
+
+    try {
+        const listOfNotes = await Note.find()
+        res.status(200).json({ listOfNotes })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ msg: 'Algo errado aconteceu com o Servidor, tente novamente mais tarde' })
+    }
+    
 })
 
 //Private route
@@ -156,15 +197,16 @@ function checkToken(req, res, next) {
 }
 
 
-const PORT = process.env.PORT || 5000 
+const PORT = process.env.PORT || 5000
 
 //Credentials
 const dbUser = process.env.DB_USER
 const dbPassword = process.env.DB_PASS
+const dbName = process.env.DB_NAME
 
 //Database Connection
 mongoose.connect(
-    `mongodb+srv://${dbUser}:${dbPassword}@mern-shopping.jntdb.mongodb.net/?retryWrites=true&w=majority`
+    `mongodb+srv://${dbUser}:${dbPassword}@${dbName}.jntdb.mongodb.net/?retryWrites=true&w=majority`
 ).then(() => {
     app.listen(PORT, console.log(`Server Running in ${process.env.NODE_ENV} mode on port ${PORT}`))
     console.log("Connected to database")
